@@ -254,7 +254,7 @@ public final class MainActivity extends Activity {
             main.post(() -> {
                 if(g!=gatt) return;
                 log("Bildirim aboneliği: "+code);
-                finish();
+                completeOperation();
             });
         }
         @Override public void onCharacteristicRead(BluetoothGatt g,BluetoothGattCharacteristic ch,int code) {
@@ -273,14 +273,14 @@ public final class MainActivity extends Activity {
                     } else if(ch.getUuid().equals(MODEL))detail("Model: "+new String(value,StandardCharsets.UTF_8));
                     else if(ch.getUuid().equals(FIRMWARE))detail("Firmware: "+new String(value,StandardCharsets.UTF_8));
                 } else log("GATT okuma hatası: "+code);
-                finish();
+                completeOperation();
             });
         }
         @Override public void onCharacteristicWrite(BluetoothGatt g,BluetoothGattCharacteristic ch,int code) {
             main.post(() -> {
                 if(g!=gatt)return;
                 log((active==null?"SCP yazma":active.name)+": "+(code==BluetoothGatt.GATT_SUCCESS?"gönderildi":"hata "+code));
-                finish();
+                completeOperation();
             });
         }
         @Override public void onCharacteristicChanged(BluetoothGatt g,BluetoothGattCharacteristic ch) {
@@ -329,13 +329,13 @@ public final class MainActivity extends Activity {
                 }
             }
         } catch(Exception e) {log(op.name+" hata: "+e.getMessage());}
-        if(!ok) {log(op.name+" başlatılamadı.");finish();return;}
+        if(!ok) {log(op.name+" başlatılamadı.");completeOperation();return;}
         operationTimeout=() -> {
-            if(active==op) {log(op.name+" zaman aşımı.");finish();}
+            if(active==op) {log(op.name+" zaman aşımı.");completeOperation();}
         };
         main.postDelayed(operationTimeout,4500);
     }
-    private void finish() {
+    private void completeOperation() {
         if(operationTimeout!=null)main.removeCallbacks(operationTimeout);
         operationTimeout=null;active=null;
         main.postDelayed(this::runQueue,100);
